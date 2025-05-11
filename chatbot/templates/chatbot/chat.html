@@ -1,0 +1,231 @@
+<!-- chatbot/templates/chatbot/chat.html -->
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Torres Chatbot</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+            margin: 0;
+            padding: 20px;
+            background-color: #f0f2f5; /* Cinza claro de fundo, mais moderno */
+            color: #333; /* Cor de texto principal */
+            font-size: 16px; /* Tamanho de fonte base aumentado */
+            line-height: 1.6; /* Melhor espaçamento entre linhas */
+        }
+        .container {
+            max-width: 800px; /* Um pouco mais largo para acomodar texto */
+            margin: 30px auto;
+            background-color: #ffffff;
+            padding: 30px; /* Mais padding interno */
+            border-radius: 12px; /* Bordas mais arredondadas */
+            box-shadow: 0 6px 18px rgba(0,0,0,0.07); /* Sombra mais sutil e moderna */
+        }
+        h1 { /* Título do Chatbot */
+            text-align: center;
+            color: #1c2938; /* Um azul escuro para o título */
+            font-size: 2.2em; /* Equivalente a ~35px se base é 16px */
+            margin-bottom: 20px; /* Reduzido um pouco para o botão Novo Chat */
+            font-weight: 600;
+        }
+        .chat-controls { /* Novo container para o botão Novo Chat */
+            text-align: right; /* Alinha o botão à direita */
+            margin-bottom: 20px;
+        }
+        .btn-new-chat {
+            background-color: #6c757d; /* Cinza para ação secundária */
+            color: white;
+            padding: 8px 15px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.95em;
+            text-decoration: none; /* Para remover sublinhado do link <a> */
+            transition: background-color 0.15s ease-in-out;
+        }
+        .btn-new-chat:hover {
+            background-color: #5a6268;
+        }
+        .chat-history {
+            border: 1px solid #dfe3e8; /* Borda mais suave */
+            padding: 20px;
+            height: 450px; /* Um pouco mais de altura */
+            overflow-y: auto;
+            margin-bottom: 25px;
+            background-color: #f8f9fa; /* Fundo levemente acinzentado para a área de chat */
+            border-radius: 8px;
+        }
+        .message {
+            margin-bottom: 15px;
+            padding: 12px 18px;
+            border-radius: 20px; /* Balões bem arredondados */
+            font-size: 1.05em; /* Equivalente a ~16.8px */
+            max-width: 75%;
+            word-wrap: break-word; /* Para quebrar palavras longas */
+            clear: both; /* Garante que os balões não se sobreponham incorretamente */
+            position: relative; /* Para pseudo-elementos, se necessário (ex: setas) */
+            line-height: 1.5; /* Melhor espaçamento dentro das mensagens */
+        }
+        .user-message {
+            background-color: #007bff; /* Azul primário vibrante */
+            color: #ffffff;
+            float: right; /* Alinha à direita */
+            margin-left: auto;
+            border-bottom-right-radius: 5px; /* Detalhe para parecer mais com balão de chat */
+        }
+        .assistant-message {
+            background-color: #e9ecef; /* Cinza claro para o assistente */
+            color: #212529; /* Texto escuro para contraste */
+            float: left; /* Alinha à esquerda */
+            margin-right: auto;
+            border-bottom-left-radius: 5px; /* Detalhe para parecer mais com balão de chat */
+        }
+        .message strong { /* "Você:", "DeepSeek:" */
+            display: block;
+            margin-bottom: 5px;
+            font-size: 0.875em; /* Equivalente a 14px */
+            font-weight: 600; /* Semi-negrito */
+        }
+        .user-message strong {
+            color: rgba(255, 255, 255, 0.85); /* Branco levemente transparente */
+        }
+        .assistant-message strong {
+            color: #495057; /* Cinza escuro para o nome do assistente */
+        }
+
+        /* Limpa os floats após as mensagens para o formulário não subir */
+        .chat-history::after {
+            content: "";
+            display: table;
+            clear: both;
+        }
+
+        form {
+            display: flex;
+            flex-direction: column;
+            gap: 10px; /* Espaço entre label/textarea e botão */
+        }
+        form label {
+            font-size: 1.1em; /* ~17.6px */
+            color: #333;
+            margin-bottom: 5px; /* Pequeno espaço antes da textarea */
+            font-weight: 500;
+        }
+        form textarea {
+            width: calc(100% - 26px); /* (padding 12px * 2 + borda 1px * 2) */
+            padding: 12px;
+            border: 1px solid #ced4da;
+            border-radius: 8px;
+            resize: vertical;
+            font-size: 1em; /* 16px */
+            min-height: 60px; /* Altura mínima para o textarea */
+            line-height: 1.5;
+        }
+        form textarea:focus {
+            border-color: #007bff; /* Cor da borda no foco */
+            box-shadow: 0 0 0 0.2rem rgba(0,123,255,.25); /* Sombra sutil no foco */
+            outline: none;
+        }
+        form button {
+            background-color: #28a745; /* Verde para o botão de enviar */
+            color: white;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1.1em; /* ~17.6px */
+            font-weight: 500;
+            transition: background-color 0.15s ease-in-out;
+            align-self: flex-start; /* Alinha o botão à esquerda se o form for flex-column */
+        }
+        form button:hover {
+            background-color: #218838; /* Verde mais escuro no hover */
+        }
+        /* Mensagem de "Nenhuma mensagem ainda" */
+        .chat-history > p {
+            font-size: 1em;
+            color: #6c757d; /* Cinza mais suave */
+            text-align: center;
+            margin-top: 30px;
+        }
+
+        /* Estilo para a barra de rolagem (opcional, webkit) */
+        .chat-history::-webkit-scrollbar {
+            width: 8px;
+        }
+        .chat-history::-webkit-scrollbar-track {
+            background: #f8f9fa; /* Cor do fundo da trilha da barra */
+            border-radius: 8px;
+        }
+        .chat-history::-webkit-scrollbar-thumb {
+            background: #ced4da; /* Cor do "polegar" da barra */
+            border-radius: 8px;
+        }
+        .chat-history::-webkit-scrollbar-thumb:hover {
+            background: #adb5bd; /* Cor do "polegar" ao passar o mouse */
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Torres Chatbot</h1>
+
+        <!-- Botão Novo Chat -->
+        <div class="chat-controls">
+            <a href="{% url 'chatbot:novo_chat' %}" class="btn-new-chat">Novo Chat</a>
+        </div>
+
+        <div class="chat-history" id="chat-history">
+            {% if not historico_conversa %}
+                <p>Nenhuma mensagem ainda. Comece a conversa!</p>
+            {% endif %}
+            {% for item in historico_conversa %}
+                {% if item.role == "user" %}
+                    <div class="message user-message">
+                        <strong>Você:</strong> {{ item.content|linebreaksbr }}
+                    </div>
+                {% elif item.role == "assistant" %}
+                    <div class="message assistant-message">
+                        <strong>DeepSeek:</strong> {{ item.content|linebreaksbr }}
+                    </div>
+                {% endif %}
+            {% endfor %}
+        </div>
+
+        <form method="post" action="{% url 'chatbot:chat' %}"> {# Adicionado action para clareza #}
+            {% csrf_token %}
+            {{ form.prompt.label_tag }}
+            {{ form.prompt }}
+            {% if form.prompt.errors %}
+                <div style="color: red; font-size: 0.9em; margin-top: -5px; margin-bottom: 10px;">
+                    {% for error in form.prompt.errors %}
+                        <p>{{ error }}</p>
+                    {% endfor %}
+                </div>
+            {% endif %}
+            <button type="submit">Enviar</button>
+        </form>
+    </div>
+
+    <script>
+        // Rolar para o final do histórico do chat automaticamente
+        var chatHistory = document.getElementById("chat-history");
+        function scrollToBottom() {
+            chatHistory.scrollTop = chatHistory.scrollHeight;
+        }
+        scrollToBottom(); // Rola ao carregar a página
+
+        // Opcional: focar no textarea ao carregar a página se o histórico estiver vazio
+        // document.addEventListener('DOMContentLoaded', (event) => {
+        //     {% if not historico_conversa %}
+        //         const promptTextarea = document.querySelector('textarea[name="prompt"]');
+        //         if (promptTextarea) {
+        //             promptTextarea.focus();
+        //         }
+        //     {% endif %}
+        // });
+    </script>
+</body>
+</html>
